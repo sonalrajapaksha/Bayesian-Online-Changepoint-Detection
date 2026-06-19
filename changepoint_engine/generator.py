@@ -1,15 +1,6 @@
 import numpy as np
 import pyarrow as pa
 import pyarrow.parquet as pq
-from dataclasses import dataclass
-
-
-@dataclass
-class Segment:
-    start: int
-    end: int
-    mean: float
-    std: float
 
 
 class SeriesGenerator:
@@ -27,25 +18,23 @@ class SeriesGenerator:
         breakpoints = [0] + changepoint_locations + [self.length]
 
         series = np.zeros(self.length)
-        segments = []
         current_mean = 0.0
 
         for i in range(len(breakpoints) - 1):
             start, end = breakpoints[i], breakpoints[i + 1]
             current_mean += self.rng.choice([-1, 1]) * shift
-            segment_data = self.rng.normal(current_mean, noise, end - start)
-            series[start:end] = segment_data
-            segments.append(Segment(start, end, current_mean, noise))
+            series[start:end] = self.rng.normal(current_mean, noise, end - start)
 
-        return series, segments
+        return series, changepoint_locations
 
     def generate(self, n_changepoints: int = 3, noise: float = 1.0, shift: float = 3.0):
         all_series = []
         all_changepoints = []
+
         for i in range(self.n_series):
-            series, segments = self._generate_one(n_changepoints, noise, shift)
+            series, cps = self.generate_one(n_changepoints, noise, shift)
             all_series.append(series)
-            all_changepoints.append(segments)
+            all_changepoints.append(cps)
         return all_series, all_changepoints
 
     def save(
@@ -66,3 +55,7 @@ class SeriesGenerator:
 
         pq.write_table(table, path)
         print(f"saved {self.n_series} series to {path}")
+
+
+gen = SeriesGenerator(n_series=100, length=500)
+gen.save("data/benchmark.parquet")
