@@ -40,3 +40,4 @@ pytest tests/
 ## Background
 
 - Killick, R., Fearnhead, P. and Eckley, I.A, [https://arxiv.org/pdf/1101.1438]
+- M. C. Jones, D. A. Henderson, [https://www.jstor.org/stable/20441430?]
